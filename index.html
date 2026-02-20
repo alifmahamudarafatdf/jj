@@ -3,1432 +3,676 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DarkFish Messenger - P2P Encrypted</title>
+    <title>DarkFish</title>
+    <!-- Tailwind + Fonts (kept minimal, custom styling dominates) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            position: fixed;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #0a0a0a;
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b0d12;
             color: #fff;
-        }
-        
-        /* Premium Dark Background */
-        .messenger-bg {
-            background: radial-gradient(circle at 20% 30%, #1a1f2e, #0a0c12 80%);
-            position: relative;
-            height: 100%;
-            width: 100%;
+            height: 100dvh;
             overflow: hidden;
+            user-select: none;
+            touch-action: pan-y pinch-zoom; /* smooth touch */
         }
-        
-        .messenger-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cGF0aCBkPSJNMjAgMTBhMTAgMTAgMCAwIDEgMCAyMCAxMCAxMCAwIDAgMSAwLTIweiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDU5LDEzMCwyNDYsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==') repeat;
-            opacity: 0.3;
-            pointer-events: none;
+
+        /* better background + glass consistency */
+        .messenger-bg {
+            background: radial-gradient(circle at 30% 40%, #1a1f2e, #080a0e 90%);
+            position: relative;
         }
-        
-        /* Glass Panel Effect */
+
         .glass-panel {
             background: rgba(18, 22, 28, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6);
         }
-        
+
         .glass-panel-light {
-            background: rgba(25, 30, 40, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(22, 26, 34, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
-        
-        /* Message Bubbles */
+
+        /* messages */
         .bubble-mine {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            border-radius: 24px 24px 4px 24px;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
-            position: relative;
-            animation: messagePop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-            max-width: 85%;
-            padding: 12px 16px;
-            font-size: 15px;
-            line-height: 1.5;
-            word-wrap: break-word;
+            background: linear-gradient(145deg, #2563eb, #3b82f6);
+            border-radius: 24px 24px 6px 24px;
+            box-shadow: 0 12px 24px -8px #1e3a8a80;
+            transition: 0.2s ease;
         }
-        
-        @media (max-width: 768px) {
-            .bubble-mine, .bubble-theirs {
-                max-width: 90%;
-                padding: 10px 14px;
-                font-size: 14px;
-            }
-        }
-        
-        .bubble-mine::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: -8px;
-            width: 16px;
-            height: 16px;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            clip-path: polygon(0 0, 0% 100%, 100% 100%);
-            opacity: 0.8;
-        }
-        
+
         .bubble-theirs {
             background: #262f3d;
-            border-radius: 24px 24px 24px 4px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
-            animation: messagePop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-            max-width: 85%;
-            padding: 12px 16px;
+            border-radius: 24px 24px 24px 6px;
+            box-shadow: 0 8px 20px -8px #00000060;
+            border: 1px solid #ffffff08;
+        }
+
+        .bubble-mine, .bubble-theirs {
+            max-width: 80%;
+            padding: 14px 20px;
             font-size: 15px;
             line-height: 1.5;
-            word-wrap: break-word;
+            word-break: break-word;
+            animation: popMsg 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
-        
-        .bubble-theirs::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: -8px;
-            width: 16px;
-            height: 16px;
-            background: #262f3d;
-            clip-path: polygon(100% 0, 0 100%, 100% 100%);
-            border-left: 1px solid rgba(255,255,255,0.03);
-        }
-        
-        .bubble-mine:hover, .bubble-theirs:hover {
-            transform: scale(1.02) translateY(-2px);
-        }
-        
-        @keyframes messagePop {
-            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+
+        @keyframes popMsg {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-        
-        /* Image Message */
+
+        /* images inside chat */
         .msg-image {
-            max-width: 250px;
-            max-height: 300px;
-            border-radius: 20px;
+            max-width: min(260px, 70vw);
+            border-radius: 24px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
-            box-shadow: 0 10px 30px -10px black;
-            object-fit: cover;
+            transition: 0.2s;
+            box-shadow: 0 10px 20px -5px #000;
         }
-        
-        @media (max-width: 768px) {
-            .msg-image {
-                max-width: 200px;
-                max-height: 250px;
-            }
-        }
-        
-        .msg-image:hover {
-            transform: scale(1.05);
-            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5);
-        }
-        
-        /* Main Container */
-        #chat-screen {
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        /* Sidebar */
+
+        /* ===== SIDEBAR (mobile perfected) ===== */
         .sidebar {
             width: 360px;
-            min-width: 360px;
+            min-width: 300px;
             height: 100vh;
-            background: rgba(10, 12, 18, 0.98);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(8, 10, 14, 0.96);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
             display: flex;
             flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-            z-index: 100;
+            transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
+            z-index: 1000;
         }
-        
-        @media (max-width: 768px) {
+
+        @media (max-width: 640px) {
             .sidebar {
                 position: fixed;
                 left: 0;
                 top: 0;
-                bottom: 0;
+                transform: translateX(-100%);
                 width: 85%;
                 max-width: 340px;
-                transform: translateX(-100%);
-                box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
-                z-index: 1000;
+                box-shadow: 10px 0 50px rgba(0,0,0,0.7);
             }
-            
             .sidebar.open {
                 transform: translateX(0);
             }
-            
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
-                z-index: 999;
-                animation: fadeIn 0.3s ease;
-            }
-            
             .sidebar-overlay.active {
                 display: block;
-            }
-            
-            /* Main chat area on mobile */
-            .main-chat {
-                width: 100% !important;
-                margin-left: 0 !important;
-            }
-        }
-        
-        /* Main Chat Area */
-        .main-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            background: linear-gradient(135deg, rgba(10, 12, 18, 0.9), rgba(15, 20, 30, 0.95));
-        }
-        
-        /* Chat Header */
-        .chat-header {
-            padding: 12px 16px;
-            background: rgba(18, 22, 28, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        @media (max-width: 768px) {
-            .chat-header {
-                padding: 10px 12px;
+                background: rgba(0,0,0,0.7);
+                backdrop-filter: blur(6px);
+                position: fixed;
+                inset: 0;
+                z-index: 999;
+                animation: fade 0.25s;
             }
         }
-        
-        /* Messages Container */
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        @media (max-width: 768px) {
-            .messages-container {
-                padding: 12px;
-                gap: 8px;
-            }
-        }
-        
-        /* Input Area */
-        .input-area {
-            padding: 12px 16px;
-            background: rgba(18, 22, 28, 0.8);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        @media (max-width: 768px) {
-            .input-area {
-                padding: 8px 12px;
-            }
-            
-            .input-container {
-                padding: 6px;
-            }
-        }
-        
-        /* Peer Cards */
+
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+        /* peer cards */
         .peer-card {
-            background: rgba(30, 35, 45, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: rgba(28, 32, 40, 0.5);
+            border: 1px solid rgba(255,255,255,0.02);
+            border-radius: 20px;
+            padding: 14px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+            transition: 0.2s;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
         }
-        
-        @media (max-width: 768px) {
-            .peer-card {
-                padding: 10px;
-                margin-bottom: 6px;
-            }
-        }
-        
-        .peer-card:active {
-            transform: scale(0.98);
-            background: rgba(37, 99, 235, 0.2);
-        }
-        
-        .peer-card.active {
-            background: rgba(37, 99, 235, 0.2);
-            border-color: rgba(59, 130, 246, 0.5);
-        }
-        
-        /* Peer Avatar */
+
+        .peer-card:active { background: #2a3240; transform: scale(0.99); }
+        .peer-card.active { background: #1e2a3a; border-color: #3b82f670; }
+
         .peer-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
+            width: 52px; height: 52px;
+            border-radius: 18px;
+            border: 2px solid #3b82f640;
             object-fit: cover;
-            border: 2px solid rgba(59, 130, 246, 0.3);
         }
-        
-        @media (max-width: 768px) {
-            .peer-avatar {
-                width: 44px;
-                height: 44px;
-                border-radius: 14px;
-            }
+
+        /* input fields (finger friendly) */
+        .premium-input {
+            background: rgba(26, 30, 38, 0.8);
+            border: 1px solid #ffffff10;
+            border-radius: 40px;
+            padding: 16px 24px;
+            font-size: 16px;
+            color: white;
+            width: 100%;
+            transition: 0.2s;
         }
-        
-        /* Status Indicators */
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 4px;
+        .premium-input:focus {
+            border-color: #3b82f6;
+            background: #1e2636;
+            box-shadow: 0 0 0 3px #3b82f630;
+            outline: none;
         }
-        
-        .status-online { 
-            background: #10b981; 
-            box-shadow: 0 0 10px #10b981;
-            animation: pulse 2s infinite;
-        }
-        
-        .status-offline { background: #6b7280; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        
-        /* Mobile Menu Button */
-        .mobile-menu-btn {
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: rgba(18, 22, 28, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: none;
-            align-items: center;
-            justify-content: center;
+
+        .premium-button {
+            background: linear-gradient(145deg, #2563eb, #3b82f6);
+            border-radius: 40px;
+            padding: 16px 28px;
+            font-weight: 700;
+            color: white;
+            border: none;
             cursor: pointer;
-            z-index: 90;
-            transition: all 0.3s ease;
+            box-shadow: 0 12px 20px -12px #2563eb;
+            transition: 0.15s;
+            touch-action: manipulation;
+            font-size: 16px;
         }
-        
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: flex;
-            }
-            
-            .mobile-menu-btn:active {
-                transform: scale(0.95);
-                background: rgba(37, 99, 235, 0.3);
-            }
+        .premium-button:active { transform: scale(0.97); background: #1d4ed8; }
+
+        .premium-button-secondary {
+            background: #1f2937;
+            border-radius: 40px;
+            padding: 16px 24px;
+            color: #ccc;
+            border: 1px solid #ffffff10;
+            transition: 0.15s;
         }
-        
-        /* Close Button */
-        .close-button {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 101;
-        }
-        
-        @media (min-width: 769px) {
-            .close-button {
-                display: none;
-            }
-        }
-        
-        .close-button:active {
-            background: rgba(255, 255, 255, 0.15);
-            transform: rotate(90deg);
-        }
-        
-        /* Setup Screen */
+        .premium-button-secondary:active { background: #2d374b; }
+
+        /* setup screen cards (more compact on mobile) */
         .setup-container {
-            background: rgba(10, 12, 18, 0.95);
+            background: rgba(12, 14, 20, 0.9);
             backdrop-filter: blur(30px);
-            border-radius: 48px;
-            padding: 32px 24px;
-            max-width: 500px;
-            width: 90%;
-            margin: 20px auto;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            animation: setupAppear 0.6s ease;
+            border-radius: 56px;
+            border: 1px solid #ffffff10;
+            padding: clamp(24px, 6vw, 48px);
+            width: 94%;
+            max-width: 560px;
+            margin: 0 auto;
+            box-shadow: 0 50px 100px -20px #000;
         }
-        
-        @media (max-width: 768px) {
-            .setup-container {
-                padding: 24px 20px;
-                border-radius: 32px;
-                width: 95%;
-            }
-            
-            .setup-container h1 {
-                font-size: 40px !important;
-            }
-        }
-        
-        @keyframes setupAppear {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        /* Profile Picture Upload */
+
+        /* profile upload */
         .pfp-upload {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 140px; height: 140px;
             margin: 0 auto 24px;
             position: relative;
             cursor: pointer;
         }
-        
-        @media (max-width: 768px) {
-            .pfp-upload {
-                width: 100px;
-                height: 100px;
-                margin-bottom: 20px;
-            }
-        }
-        
         .pfp-upload img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
+            border: 4px solid #3b82f6;
             object-fit: cover;
-            border: 3px solid #3b82f6;
-            padding: 3px;
-            transition: all 0.3s ease;
+            background: #0a0c12;
         }
-        
-        .pfp-upload:active img {
-            transform: scale(1.05);
-        }
-        
         .pfp-upload-overlay {
             position: absolute;
-            bottom: 4px;
-            right: 4px;
+            bottom: 4px; right: 4px;
             background: #2563eb;
-            width: 36px;
-            height: 36px;
+            width: 42px; height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 3px solid #0a0c12;
+            border: 3px solid #0b0d12;
         }
-        
-        @media (max-width: 768px) {
-            .pfp-upload-overlay {
-                width: 32px;
-                height: 32px;
-            }
-            
-            .pfp-upload-overlay svg {
-                width: 18px;
-                height: 18px;
-            }
+
+        /* chat window scroll */
+        .chat-window {
+            scroll-behavior: smooth;
+            padding-bottom: 8px;
         }
-        
-        /* Input Fields */
-        .premium-input {
-            background: rgba(30, 35, 45, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 30px;
-            padding: 14px 20px;
-            color: white;
-            font-size: 15px;
-            width: 100%;
-            transition: all 0.3s ease;
+
+        /* status */
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
         }
-        
-        @media (max-width: 768px) {
-            .premium-input {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-        }
-        
-        .premium-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background: rgba(40, 48, 64, 0.9);
-        }
-        
-        /* Buttons */
-        .premium-button {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            border: none;
-            border-radius: 30px;
-            padding: 14px 24px;
-            font-weight: 700;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.5);
-        }
-        
-        @media (max-width: 768px) {
-            .premium-button {
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-        }
-        
-        .premium-button:active {
-            transform: scale(0.97);
-        }
-        
-        .premium-button-secondary {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 30px;
-            padding: 14px 20px;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s ease;
-        }
-        
-        .premium-button-secondary:active {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(0.97);
-        }
-        
-        /* Modal */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 16px;
-        }
-        
-        .modal-content {
-            background: #1a1f2c;
-            border-radius: 32px;
-            padding: 32px 24px;
-            max-width: 400px;
-            width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        
-        @media (max-width: 768px) {
-            .modal-content {
-                padding: 24px 20px;
-                border-radius: 28px;
-            }
-        }
-        
-        /* Typing Indicator */
+        .status-online { background: #10b981; box-shadow: 0 0 12px #10b981; }
+        .status-offline { background: #5f6b7a; }
+
+        /* typing indicator */
         .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 8px 12px;
-            background: #262f3d;
-            border-radius: 24px;
+            background: #1e2732;
+            border-radius: 30px;
+            padding: 12px 18px;
             width: fit-content;
-            margin: 5px 0;
+            display: flex;
+            gap: 6px;
         }
-        
         .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: #9ca3af;
+            width: 8px; height: 8px;
+            background: #94a3b8;
             border-radius: 50%;
-            animation: typingBounce 1.4s infinite;
+            animation: bounce 1.4s infinite;
         }
-        
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
+        @keyframes bounce { 30% { transform: translateY(-8px); } }
+
+        /* modals touch */
+        .modal-content {
+            background: #1e2432;
+            border-radius: 48px;
+            padding: 32px 24px;
+            width: 90%;
+            max-width: 400px;
         }
-        
-        /* Toast */
+
+        /* no zoom on input for iOS */
+        input, button { font-size: 16px; }
+
+        /* mobile menu button always visible */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 18px; left: 16px;
+            width: 50px; height: 50px;
+            border-radius: 18px;
+            background: #1a1e28e0;
+            backdrop-filter: blur(12px);
+            border: 1px solid #ffffff20;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: 0.2s;
+        }
+        @media (max-width: 640px) {
+            .mobile-menu-btn { display: flex; }
+        }
+
+        /* partner pfp + header responsive */
+        .chat-header {
+            margin: 12px 12px 0 12px;
+            border-radius: 28px;
+            padding: 12px 16px;
+        }
+        @media (max-width: 480px) {
+            .chat-header h2 { font-size: 1.2rem; }
+        }
+
+        /* toast */
         .toast {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            transform: translateY(100px);
-            background: #1a1f2c;
+            bottom: 30px; left: 20px; right: 20px;
+            transform: translateY(150%);
+            background: #1f2a3a;
             color: white;
-            padding: 14px 20px;
-            border-radius: 30px;
-            font-weight: 600;
+            padding: 16px 28px;
+            border-radius: 60px;
             text-align: center;
+            font-weight: 600;
             box-shadow: 0 20px 40px -10px black;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
             z-index: 10000;
-            transition: transform 0.3s ease;
-            max-width: 400px;
+            max-width: 380px;
             margin: 0 auto;
         }
-        
-        .toast.show {
-            transform: translateY(0);
-        }
-        
-        /* Image Modal */
-        .image-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            padding: 20px;
-        }
-        
-        .image-modal img {
-            max-width: 100%;
-            max-height: 90vh;
-            border-radius: 20px;
-            object-fit: contain;
-        }
-        
-        /* Hide scrollbar for chat window on mobile */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        
-        /* Ensure content fits */
-        #setup-screen, #chat-screen {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-        }
+        .toast.show { transform: translateY(0); }
     </style>
 </head>
-<body class="messenger-bg no-select" oncontextmenu="return false" onkeydown="if(event.key === 'F12'||(event.ctrlKey&&event.shiftKey&&event.keyCode===73)||(event.ctrlKey&&event.keyCode===85)){event.preventDefault();return false}">
+<body class="messenger-bg" oncontextmenu="return false">
 
-    <!-- Setup Screen -->
-    <div id="setup-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: radial-gradient(circle at 20% 30%, #1a1f2e, #0a0c12 80%);">
-        <div class="setup-container">
-            <div class="text-center mb-6 md:mb-8">
-                <h1 class="text-4xl md:text-6xl font-black tracking-tighter bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">DarkFish</h1>
-                <p class="text-slate-500 text-xs md:text-sm uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold">Private P2P Messenger</p>
-            </div>
-            
-            <div class="space-y-6 md:space-y-8">
-                <!-- Profile Picture Upload -->
-                <div class="pfp-upload" onclick="document.getElementById('pfp-input').click()">
-                    <img id="pfp-preview" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default" alt="avatar">
-                    <div class="pfp-upload-overlay">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    </div>
-                </div>
-                <input type="file" id="pfp-input" class="hidden" accept="image/*">
-                
-                <!-- Username Input -->
-                <input type="text" id="username" placeholder="Enter your nickname..." class="premium-input text-center text-lg md:text-xl font-bold">
-                
-                <!-- Action Buttons -->
-                <div class="space-y-3 md:space-y-4">
-                    <button onclick="createRoom()" class="premium-button w-full">
-                        Create Private Room
-                    </button>
-                    
-                    <div class="relative py-3">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-white/5"></div>
-                        </div>
-                        <div class="relative flex justify-center">
-                            <span class="bg-[#1a1f2c] px-4 text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">or join friend</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <input type="text" id="join-id" placeholder="Paste friend's ID..." class="premium-input flex-1 text-sm md:text-base">
-                        <button onclick="joinRoom()" class="premium-button-secondary px-5 md:px-8 font-bold text-sm md:text-base whitespace-nowrap">Join</button>
-                    </div>
+<!-- SETUP SCREEN (mobile optimized) -->
+<div id="setup-screen" class="fixed inset-0 z-50 flex items-center justify-center p-3">
+    <div class="setup-container">
+        <div class="text-center mb-6">
+            <h1 class="text-5xl sm:text-6xl font-black bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent tracking-tight">DarkFish</h1>
+            <p class="text-slate-600 text-xs uppercase tracking-[0.3em] font-bold mt-2">zero‑server · p2p</p>
+        </div>
+        <div class="space-y-6">
+            <div class="pfp-upload" onclick="document.getElementById('pfp-input').click()">
+                <img id="pfp-preview" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=dark" alt="avatar">
+                <div class="pfp-upload-overlay">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </div>
             </div>
-            
-            <div class="mt-6 md:mt-8 text-center text-[8px] md:text-[10px] text-slate-700 font-bold uppercase tracking-widest">
-                ⚡ End-to-End Encrypted • Zero Server Storage
+            <input type="file" id="pfp-input" class="hidden" accept="image/*">
+
+            <input type="text" id="username" placeholder="Your nickname" class="premium-input text-center text-xl font-bold">
+
+            <button onclick="createRoom()" class="premium-button w-full text-lg py-4">Create private room</button>
+
+            <div class="relative py-2">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
+                <div class="relative flex justify-center"><span class="bg-[#1a1f2c] px-6 text-xs text-slate-400">or join friend</span></div>
             </div>
+
+            <div class="flex gap-2">
+                <input type="text" id="join-id" placeholder="Paste friend's ID" class="premium-input flex-1">
+                <button onclick="joinRoom()" class="premium-button-secondary px-6 font-bold">Join</button>
+            </div>
+            <p class="text-center text-[9px] text-slate-700 font-bold uppercase tracking-widest">⚡ end‑to‑end encrypted</p>
         </div>
     </div>
+</div>
 
-    <!-- Mobile Menu Button -->
-    <button class="mobile-menu-btn" onclick="toggleSidebar()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
+<!-- mobile menu trigger -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
-    <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
-
-    <!-- Main Chat Interface -->
-    <div id="chat-screen" class="hidden">
-        <!-- Sidebar -->
-        <div id="sidebar" class="sidebar">
-            <!-- Close Button for Mobile -->
-            <div class="close-button" onclick="closeSidebar()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
-            
-            <!-- Sidebar Header -->
-            <div class="p-4 md:p-6 border-b border-white/5 flex items-center justify-between">
-                <h1 class="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Inbox</h1>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] md:text-xs text-slate-500">Online</span>
-                </div>
-            </div>
-            
-            <!-- My ID Card -->
-            <div class="p-4 md:p-6 border-b border-white/5">
-                <div class="glass-panel-light p-3 md:p-4 rounded-xl md:rounded-2xl">
-                    <div class="text-[10px] md:text-xs text-slate-500 mb-1 md:mb-2">YOUR ID</div>
-                    <div class="flex items-center justify-between gap-2">
-                        <code id="my-id-display" class="text-[10px] md:text-xs font-mono bg-black/30 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl truncate">loading...</code>
-                        <button onclick="copyID()" class="text-blue-400 hover:text-blue-300 transition-all p-1.5 md:p-2 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Peer List -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar" id="peer-list"></div>
-            
-            <!-- Add Peer Section -->
-            <div class="p-4 md:p-6 border-t border-white/5">
-                <div class="text-[10px] md:text-xs font-bold text-slate-500 mb-2 md:mb-3 tracking-wider">ADD NEW PEER</div>
-                <div class="flex gap-2">
-                    <input type="text" id="add-peer-id" placeholder="Enter Peer ID..." class="premium-input flex-1 text-xs md:text-sm py-3 md:py-4">
-                    <button onclick="addPeer()" class="premium-button px-4 md:px-6 text-sm whitespace-nowrap">Add</button>
-                </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="p-3 md:p-4 text-center text-[8px] text-slate-700 font-black uppercase tracking-widest border-t border-white/5">
-                POWERED BY DARKFISH P2P
-            </div>
+<!-- MAIN CHAT -->
+<div id="chat-screen" class="hidden h-screen w-screen flex">
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="sidebar">
+        <div class="close-button md:hidden absolute right-4 top-4 z-20" onclick="closeSidebar()">
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke="white"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </div>
-
-        <!-- Main Chat Area -->
-        <div class="main-chat">
-            <!-- Chat Header -->
-            <div class="chat-header">
-                <div class="flex items-center gap-3 md:gap-4">
-                    <img id="partner-pfp" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default" class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-2 border-blue-500/50">
-                    <div>
-                        <h2 id="partner-display" class="font-bold text-base md:text-xl">Select a chat</h2>
-                        <div class="flex items-center gap-1.5 mt-0.5 md:mt-1">
-                            <span id="status-dot" class="status-dot status-offline"></span>
-                            <span id="status-text" class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Disconnected</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="copyID()" class="premium-button-secondary px-3 md:px-5 py-2 md:py-3 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 whitespace-nowrap">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span class="hidden md:inline">Copy ID</span>
-                    <span class="md:hidden">ID</span>
-                </button>
-            </div>
-
-            <!-- Messages Window -->
-            <div id="chat-window" class="messages-container no-scrollbar">
-                <!-- Placeholder when no chat -->
-                <div id="chat-placeholder" class="h-full flex flex-col items-center justify-center text-center px-4">
-                    <div class="w-16 h-16 md:w-20 md:h-20 glass-panel-light rounded-2xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-black text-slate-300 mb-2">End-to-End Encrypted</h3>
-                    <p class="text-xs md:text-sm text-slate-500 max-w-xs md:max-w-md">Messages never touch any server. Add a peer ID to start a private conversation.</p>
-                </div>
-            </div>
-
-            <!-- Typing Indicator -->
-            <div id="typing-indicator" class="hidden px-4 md:px-6 mb-1 md:mb-2">
-                <div class="typing-indicator">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>
-
-            <!-- Message Input -->
-            <div class="input-area">
-                <div class="glass-panel-light rounded-2xl md:rounded-3xl p-2 md:p-3 flex items-center gap-2 input-container">
-                    <label class="p-2 md:p-3 hover:bg-white/5 rounded-xl md:rounded-2xl cursor-pointer transition-all flex-shrink-0">
-                        <input type="file" id="file-input" class="hidden" accept="image/*,video/*">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    </label>
-                    
-                    <form id="chat-form" class="flex-1 flex items-center gap-2">
-                        <input type="text" id="msg-input" autocomplete="off" placeholder="Type a message..." class="flex-1 bg-transparent px-2 md:px-3 py-2 outline-none text-sm md:text-base placeholder:text-slate-600 min-w-0">
-                        <button type="submit" class="premium-button p-2.5 md:p-3.5 rounded-xl md:rounded-2xl flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                        </button>
-                    </form>
+        <div class="p-5 border-b border-white/5 flex items-center justify-between">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">Inbox</h1>
+            <div class="flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-xs text-slate-400">online</span></div>
+        </div>
+        <div class="p-5 border-b border-white/5">
+            <div class="glass-panel-light p-4 rounded-2xl">
+                <div class="text-xs text-slate-400 mb-2">YOUR ID</div>
+                <div class="flex items-center justify-between">
+                    <code id="my-id-display" class="text-sm font-mono bg-black/40 px-3 py-2 rounded-xl">loading...</code>
+                    <button onclick="copyID()" class="text-blue-400 p-2 active:scale-90"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
                 </div>
             </div>
         </div>
+        <div class="flex-1 overflow-y-auto p-5 space-y-1" id="peer-list"></div>
+        <div class="p-5 border-t border-white/5">
+            <div class="text-xs font-bold text-slate-400 mb-3">ADD PEER</div>
+            <div class="flex gap-2">
+                <input type="text" id="add-peer-id" placeholder="Peer ID..." class="premium-input text-sm py-3 px-4">
+                <button onclick="addPeer()" class="premium-button px-5 py-3 text-sm">Add</button>
+            </div>
+        </div>
+        <div class="p-2 text-center text-[7px] text-slate-700 border-t border-white/5">DARKFISH P2P · NO STORAGE</div>
     </div>
 
-    <!-- Request Modal -->
-    <div id="request-modal" class="modal-backdrop hidden">
-        <div class="modal-content">
-            <div class="text-center">
-                <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 bg-blue-500/20 rounded-2xl md:rounded-3xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <!-- MAIN CHAT AREA (fully responsive) -->
+    <div class="flex-1 flex flex-col h-full max-w-full">
+        <!-- header -->
+        <div class="glass-panel-light m-2 sm:m-4 rounded-2xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-3 truncate">
+                <img id="partner-pfp" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default" class="w-12 h-12 rounded-2xl border-2 border-blue-500/40 flex-shrink-0">
+                <div class="min-w-0">
+                    <h2 id="partner-display" class="font-bold text-lg truncate">Select chat</h2>
+                    <div class="flex items-center gap-1 text-xs">
+                        <span id="status-dot" class="status-dot status-offline"></span>
+                        <span id="status-text" class="text-slate-400">Disconnected</span>
+                    </div>
                 </div>
-                <h3 class="text-xl md:text-2xl font-black mb-2">Friend Request</h3>
-                <p class="text-sm md:text-base text-slate-400 mb-6 md:mb-8">
-                    <span id="request-name" class="text-white font-bold"></span> wants to chat
-                </p>
-                <div class="flex gap-3">
-                    <button id="accept-btn" class="premium-button flex-1 text-sm md:text-base">Accept</button>
-                    <button id="reject-btn" class="premium-button-secondary flex-1 text-sm md:text-base">Decline</button>
-                </div>
+            </div>
+            <button onclick="copyID()" class="premium-button-secondary p-3 sm:px-5 sm:py-3 text-sm flex items-center gap-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="hidden sm:inline">Copy ID</span></button>
+        </div>
+
+        <!-- messages -->
+        <div id="chat-window" class="flex-1 overflow-y-auto px-4 py-3 space-y-3 chat-window">
+            <div id="chat-placeholder" class="h-full flex flex-col items-center justify-center text-center px-6">
+                <div class="w-20 h-20 glass-panel-light rounded-3xl flex items-center justify-center mb-4"><svg width="40" height="40" viewBox="0 0 24 24" stroke="#3b82f660" fill="none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <h3 class="text-xl font-bold text-slate-300 mb-2">Private & encrypted</h3>
+                <p class="text-slate-500 text-sm max-w-xs">Messages are direct — add a peer to start.</p>
+            </div>
+        </div>
+
+        <!-- typing indicator -->
+        <div id="typing-indicator" class="hidden px-5 mb-1"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>
+
+        <!-- input -->
+        <div class="p-3 sm:p-5 pt-1">
+            <div class="glass-panel-light rounded-3xl p-2 flex items-center gap-2">
+                <label class="p-3 active:bg-white/10 rounded-2xl cursor-pointer">
+                    <input type="file" id="file-input" class="hidden" accept="image/*,video/*">
+                    <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </label>
+                <form id="chat-form" class="flex-1 flex items-center gap-2">
+                    <input type="text" id="msg-input" placeholder="Message..." class="flex-1 bg-transparent px-3 py-4 text-base outline-none placeholder:text-slate-600 min-w-0">
+                    <button type="submit" class="premium-button p-4 rounded-2xl aspect-square flex items-center justify-center"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Image Modal -->
-    <div id="image-modal" class="image-modal hidden" onclick="this.classList.add('hidden')">
-        <img id="fullscreen-image" src="" alt="Full screen">
+<!-- request modal -->
+<div id="request-modal" class="modal-backdrop hidden fixed inset-0 bg-black/70 backdrop-blur-lg z-[2000] flex items-center justify-center">
+    <div class="modal-content glass-panel p-8 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 bg-blue-500/30 rounded-3xl flex items-center justify-center"><svg width="36" height="36" stroke="#3b82f6" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h3 class="text-2xl font-bold mb-2">Request</h3>
+        <p class="mb-6"><span id="request-name" class="font-bold text-blue-300"></span> wants to chat</p>
+        <div class="flex gap-3">
+            <button id="accept-btn" class="premium-button flex-1 py-4">Accept</button>
+            <button id="reject-btn" class="premium-button-secondary flex-1 py-4">Decline</button>
+        </div>
     </div>
+</div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+<!-- image modal -->
+<div id="image-modal" class="image-modal hidden fixed inset-0 bg-black/95 z-[3000] flex items-center justify-center" onclick="this.classList.add('hidden')">
+    <img id="fullscreen-image" class="max-w-[95vw] max-h-[90vh] rounded-3xl shadow-2xl">
+</div>
 
-    <script>
-        // ==================== CONFIGURATION ====================
-        let peer, conns = new Map();
-        let currentConn = null;
-        let myId = null;
-        let myName = '';
-        let myPfp = null;
-        let pendingRequests = new Map();
-        
-        const STORAGE_KEY = 'darkfish_chats';
-        const ACCEPTED_PEERS_KEY = 'darkfish_peers';
-        const PFP_KEY = 'darkfish_pfp';
-        
-        // ==================== INITIALIZATION ====================
-        function init() {
-            const savedPfp = localStorage.getItem(PFP_KEY);
-            if (savedPfp) {
-                myPfp = savedPfp;
-                document.getElementById('pfp-preview').src = myPfp;
-            } else {
-                const seed = Math.random().toString(36).substring(7);
-                myPfp = `https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=${seed}`;
-                document.getElementById('pfp-preview').src = myPfp;
-            }
-            
-            const savedName = localStorage.getItem('darkfish_name');
-            if (savedName) {
-                document.getElementById('username').value = savedName;
-            }
-            
-            // Handle orientation change
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    closeSidebar();
-                }
-            });
-        }
-        
-        // ==================== UI FUNCTIONS ====================
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-        }
-        
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebar-overlay').classList.remove('active');
-        }
-        
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            toast.style.background = type === 'error' ? '#dc2626' : '#2563eb';
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-        
-        // ==================== SETUP SCREEN ====================
-        document.getElementById('pfp-input').onchange = function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    myPfp = ev.target.result;
-                    document.getElementById('pfp-preview').src = myPfp;
-                    localStorage.setItem(PFP_KEY, myPfp);
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        
+<!-- toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+    (function(){
+        // ---- strict mobile friendly ----
+        let peer, conns = new Map(), currentConn = null, myId = null, myName = '', myPfp = null;
+        const STORAGE_KEY = 'darkfish_chats', ACCEPTED_PEERS_KEY = 'darkfish_peers', PFP_KEY = 'darkfish_pfp';
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
+        function showToast(msg, type='info') { let t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); t.style.background = type==='error'?'#b91c1c':'#1e3a8a'; setTimeout(()=>t.classList.remove('show'), 2800); }
+
+        // pfp
+        document.getElementById('pfp-input')?.addEventListener('change', function(e){
+            let file = e.target.files[0]; if(!file) return;
+            let reader = new FileReader();
+            reader.onload = (ev) => { myPfp = ev.target.result; document.getElementById('pfp-preview').src = myPfp; localStorage.setItem(PFP_KEY, myPfp); };
+            reader.readAsDataURL(file);
+        });
+
         function createRoom() {
             myName = document.getElementById('username').value.trim();
-            if (!myName) {
-                showToast('Please enter a nickname', 'error');
-                return;
-            }
-            localStorage.setItem('darkfish_name', myName);
-            localStorage.setItem(PFP_KEY, myPfp);
-            
-            document.getElementById('setup-screen').style.display = 'none';
+            if(!myName) return showToast('Enter nickname', 'error');
+            localStorage.setItem('darkfish_name', myName); localStorage.setItem(PFP_KEY, myPfp||document.getElementById('pfp-preview').src);
+            document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             initPeer();
         }
-        
+
         function joinRoom() {
-            const targetId = document.getElementById('join-id').value.trim();
-            if (!targetId) {
-                showToast('Please enter a Peer ID', 'error');
-                return;
-            }
-            
+            let target = document.getElementById('join-id').value.trim();
+            if(!target) return showToast('Paste ID', 'error');
             myName = document.getElementById('username').value.trim();
-            if (!myName) {
-                showToast('Please enter a nickname', 'error');
-                return;
-            }
-            
-            localStorage.setItem('darkfish_name', myName);
-            localStorage.setItem(PFP_KEY, myPfp);
-            
-            document.getElementById('setup-screen').style.display = 'none';
+            if(!myName) return showToast('Enter nickname', 'error');
+            localStorage.setItem('darkfish_name', myName); localStorage.setItem(PFP_KEY, myPfp||document.getElementById('pfp-preview').src);
+            document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
-            initPeer(targetId);
+            initPeer(target);
         }
-        
-        // ==================== PEERJS INIT ====================
-        function initPeer(connectToId = null) {
+
+        function initPeer(connectToId = null){
             peer = new Peer();
-            
             peer.on('open', (id) => {
-                myId = id;
-                document.getElementById('my-id-display').innerText = id;
-                showToast('Your ID: ' + id);
-                
-                const savedPeers = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
-                savedPeers.forEach(peerId => {
-                    if (peerId !== id) {
-                        setTimeout(() => connectToPeer(peerId), 1000);
-                    }
-                });
-                
-                if (connectToId) {
-                    setTimeout(() => connectToPeer(connectToId), 1000);
-                }
+                myId = id; document.getElementById('my-id-display').innerText = id;
+                showToast('Your ID: '+id);
+                let saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY)||'[]');
+                saved.forEach(pid => { if(pid !== id) setTimeout(()=>connectToPeer(pid), 900); });
+                if(connectToId) setTimeout(()=>connectToPeer(connectToId), 1000);
             });
-            
-            peer.on('connection', (conn) => {
-                setupConnection(conn, false);
-            });
-            
-            peer.on('error', (err) => {
-                console.error('Peer error:', err);
-                showToast('Connection error', 'error');
-            });
+            peer.on('connection', (c) => setupConnection(c, false));
+            peer.on('error', (e) => showToast('Peer error','error'));
         }
-        
-        function connectToPeer(peerId) {
-            if (conns.has(peerId)) {
-                showToast('Already connected');
-                return;
-            }
-            
-            const conn = peer.connect(peerId, {
-                metadata: {
-                    name: myName,
-                    pfp: myPfp,
-                    request: true
-                }
-            });
-            
+
+        function connectToPeer(pid){
+            if(conns.has(pid)) return showToast('Already added');
+            let conn = peer.connect(pid, {metadata:{name:myName, pfp:myPfp, request:true}});
             setupConnection(conn, true);
         }
-        
-        function addPeer() {
-            const peerId = document.getElementById('add-peer-id').value.trim();
-            if (!peerId) {
-                showToast('Please enter a Peer ID', 'error');
-                return;
-            }
-            connectToPeer(peerId);
+
+        function addPeer(){
+            let pid = document.getElementById('add-peer-id').value.trim();
+            if(!pid) return showToast('Enter ID','error');
+            connectToPeer(pid);
             document.getElementById('add-peer-id').value = '';
             closeSidebar();
         }
-        
-        // ==================== CONNECTION SETUP ====================
-        function setupConnection(conn, isInitiator) {
-            const peerId = conn.peer;
-            
-            conns.set(peerId, {
-                conn: conn,
-                accepted: false,
-                name: isInitiator ? 'Connecting...' : 'Incoming',
-                pfp: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=pending',
-                typingTimeout: null
+
+        function setupConnection(conn, isInitiator){
+            let pid = conn.peer;
+            conns.set(pid, {conn, accepted:false, name:isInitiator?'Connecting...':'Incoming', pfp:'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=peer', typingTimeout:null});
+            renderPeerCard(pid);
+            conn.on('open', ()=>{
+                let saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY)||'[]');
+                if(saved.includes(pid)) autoAcceptPeer(pid, conn.metadata?.name, conn.metadata?.pfp);
+                else if(!isInitiator && conn.metadata?.request) showRequestModal(pid, conn.metadata.name, conn.metadata.pfp);
             });
-            
-            renderPeerCard(peerId);
-            
-            conn.on('open', () => {
-                const savedPeers = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
-                
-                if (savedPeers.includes(peerId)) {
-                    autoAcceptPeer(peerId, conn.metadata?.name, conn.metadata?.pfp);
-                } else if (!isInitiator && conn.metadata?.request) {
-                    showRequestModal(peerId, conn.metadata.name, conn.metadata.pfp);
-                }
-            });
-            
-            conn.on('data', (data) => {
-                handleData(peerId, data);
-            });
-            
-            conn.on('close', () => {
-                cleanupPeer(peerId);
-            });
+            conn.on('data', (d) => handleData(pid, d));
+            conn.on('close', ()=>cleanupPeer(pid));
+            conn.on('error', ()=>cleanupPeer(pid));
         }
-        
-        function autoAcceptPeer(peerId, name, pfp) {
-            const entry = conns.get(peerId);
-            if (!entry) return;
-            
-            entry.accepted = true;
-            entry.name = name || 'Friend';
-            entry.pfp = pfp || entry.pfp;
-            
-            entry.conn.send({
-                type: 'accept',
-                name: myName,
-                pfp: myPfp
-            });
-            
-            updatePeerCard(peerId);
-            showToast('Connected to ' + entry.name);
+
+        function autoAcceptPeer(pid, name, pfp){
+            let e = conns.get(pid); if(!e) return;
+            e.accepted = true; e.name = name||'Friend'; e.pfp = pfp||e.pfp;
+            e.conn.send({type:'accept', name:myName, pfp:myPfp});
+            updatePeerCard(pid);
+            showToast('Connected to '+e.name);
         }
-        
-        function showRequestModal(peerId, name, pfp) {
-            pendingRequests.set(peerId, { name, pfp });
-            
-            document.getElementById('request-name').innerText = name || 'Someone';
+
+        function showRequestModal(pid, name, pfp){
+            document.getElementById('request-name').innerText = name||'Someone';
             document.getElementById('request-modal').classList.remove('hidden');
-            
-            const acceptBtn = document.getElementById('accept-btn');
-            const rejectBtn = document.getElementById('reject-btn');
-            
-            acceptBtn.onclick = () => {
-                acceptPeer(peerId, name, pfp);
-                document.getElementById('request-modal').classList.add('hidden');
-                pendingRequests.delete(peerId);
-            };
-            
-            rejectBtn.onclick = () => {
-                const entry = conns.get(peerId);
-                if (entry) entry.conn.close();
-                conns.delete(peerId);
-                removePeerCard(peerId);
-                document.getElementById('request-modal').classList.add('hidden');
-                pendingRequests.delete(peerId);
-            };
+            let a = document.getElementById('accept-btn'), r = document.getElementById('reject-btn');
+            a.onclick = ()=>{ acceptPeer(pid, name, pfp); document.getElementById('request-modal').classList.add('hidden'); };
+            r.onclick = ()=>{ conns.get(pid)?.conn.close(); conns.delete(pid); removePeerCard(pid); document.getElementById('request-modal').classList.add('hidden'); };
         }
-        
-        function acceptPeer(peerId, name, pfp) {
-            const entry = conns.get(peerId);
-            if (!entry) return;
-            
-            entry.accepted = true;
-            entry.name = name || 'Friend';
-            entry.pfp = pfp || entry.pfp;
-            
-            entry.conn.send({
-                type: 'accept',
-                name: myName,
-                pfp: myPfp
-            });
-            
-            const saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
-            if (!saved.includes(peerId)) {
-                saved.push(peerId);
-                localStorage.setItem(ACCEPTED_PEERS_KEY, JSON.stringify(saved));
-            }
-            
-            updatePeerCard(peerId);
-            selectChat(peerId);
-            showToast('Connected to ' + entry.name);
+
+        function acceptPeer(pid, name, pfp){
+            let e = conns.get(pid); if(!e) return;
+            e.accepted = true; e.name = name||'Friend'; e.pfp = pfp||e.pfp;
+            e.conn.send({type:'accept', name:myName, pfp:myPfp});
+            let saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY)||'[]');
+            if(!saved.includes(pid)){ saved.push(pid); localStorage.setItem(ACCEPTED_PEERS_KEY, JSON.stringify(saved)); }
+            updatePeerCard(pid); selectChat(pid); showToast('Connected');
         }
-        
-        // ==================== DATA HANDLING ====================
-        function handleData(peerId, data) {
-            const entry = conns.get(peerId);
-            if (!entry) return;
-            
-            if (data.type === 'accept') {
-                entry.accepted = true;
-                entry.name = data.name || entry.name;
-                entry.pfp = data.pfp || entry.pfp;
-                
-                const saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
-                if (!saved.includes(peerId)) {
-                    saved.push(peerId);
-                    localStorage.setItem(ACCEPTED_PEERS_KEY, JSON.stringify(saved));
-                }
-                
-                updatePeerCard(peerId);
-                
-                if (!currentConn) {
-                    selectChat(peerId);
-                }
-                
-                showToast('Connected to ' + entry.name);
-                
-            } else if (data.type === 'typing') {
-                if (currentConn?.peer === peerId) {
-                    document.getElementById('typing-indicator').classList.remove('hidden');
-                    clearTimeout(entry.typingTimeout);
-                    entry.typingTimeout = setTimeout(() => {
-                        document.getElementById('typing-indicator').classList.add('hidden');
-                    }, 2000);
-                }
-                
-            } else if (data.type === 'text') {
-                if (entry.accepted) {
-                    displayMessage(peerId, data.text, 'theirs');
-                }
-                
-            } else if (data.type === 'file') {
-                if (entry.accepted) {
-                    displayFileMessage(peerId, data, 'theirs');
-                }
-            }
+
+        function handleData(pid, data){
+            let e = conns.get(pid); if(!e) return;
+            if(data.type === 'accept'){
+                e.accepted = true; e.name = data.name||e.name; e.pfp = data.pfp||e.pfp;
+                let saved = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY)||'[]');
+                if(!saved.includes(pid)){ saved.push(pid); localStorage.setItem(ACCEPTED_PEERS_KEY, JSON.stringify(saved)); }
+                updatePeerCard(pid); if(!currentConn) selectChat(pid);
+            } else if(data.type === 'typing'){
+                if(currentConn?.peer === pid) { document.getElementById('typing-indicator').classList.remove('hidden'); clearTimeout(e.typingTimeout); e.typingTimeout = setTimeout(()=>document.getElementById('typing-indicator').classList.add('hidden'), 1500); }
+            } else if(data.type === 'text' && e.accepted) displayMessage(pid, data.text, 'theirs');
+            else if(data.type === 'file' && e.accepted) displayFileMessage(pid, data, 'theirs');
         }
-        
-        // ==================== MESSAGING ====================
-        document.getElementById('chat-form').onsubmit = function(e) {
+
+        document.getElementById('chat-form').onsubmit = function(e){
             e.preventDefault();
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            
-            if (!text || !currentConn) {
-                showToast('No chat selected', 'error');
-                return;
-            }
-            
-            currentConn.send({
-                type: 'text',
-                text: text
-            });
-            
-            displayMessage(currentConn.peer, text, 'mine');
-            input.value = '';
+            let inp = document.getElementById('msg-input'); let txt = inp.value.trim();
+            if(!txt || !currentConn) return showToast('No chat selected','error');
+            currentConn.send({type:'text', text:txt});
+            displayMessage(currentConn.peer, txt, 'mine'); inp.value = '';
         };
-        
-        document.getElementById('msg-input').oninput = function() {
-            if (currentConn) {
-                currentConn.send({ type: 'typing' });
-            }
+        document.getElementById('msg-input').oninput = function(){ if(currentConn) currentConn.send({type:'typing'}); };
+        document.getElementById('file-input').onchange = function(e){
+            let file = e.target.files[0]; if(!file||!currentConn) return;
+            let reader = new FileReader();
+            reader.onload = (ev) => {
+                let d = {type:'file', fileData:ev.target.result, fileType:file.type, fileName:file.name};
+                currentConn.send(d); displayFileMessage(currentConn.peer, d, 'mine');
+            }; reader.readAsDataURL(file);
         };
-        
-        document.getElementById('file-input').onchange = function(e) {
-            const file = e.target.files[0];
-            if (!file || !currentConn) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                const data = {
-                    type: 'file',
-                    fileData: ev.target.result,
-                    fileType: file.type,
-                    fileName: file.name
-                };
-                
-                currentConn.send(data);
-                displayFileMessage(currentConn.peer, data, 'mine');
-            };
-            reader.readAsDataURL(file);
-        };
-        
-        function displayMessage(peerId, text, sender) {
-            const window = document.getElementById('chat-window');
-            const placeholder = document.getElementById('chat-placeholder');
-            if (placeholder) placeholder.style.display = 'none';
-            
-            const div = document.createElement('div');
-            div.className = `flex ${sender === 'mine' ? 'justify-end' : 'justify-start'} mb-2 md:mb-3`;
-            
-            const bubble = document.createElement('div');
-            bubble.className = sender === 'mine' ? 'bubble-mine' : 'bubble-theirs';
-            bubble.textContent = text;
-            
-            div.appendChild(bubble);
-            window.appendChild(div);
-            window.scrollTop = window.scrollHeight;
-            
-            saveMessage(peerId, { text, sender, type: 'text', timestamp: Date.now() });
+
+        function displayMessage(pid, text, s){
+            let w = document.getElementById('chat-window'); document.getElementById('chat-placeholder').style.display='none';
+            let d = document.createElement('div'); d.className = `flex ${s==='mine'?'justify-end':'justify-start'} mb-3`;
+            let b = document.createElement('div'); b.className = s==='mine' ? 'bubble-mine' : 'bubble-theirs'; b.innerText = text;
+            d.appendChild(b); w.appendChild(d); w.scrollTop = w.scrollHeight;
+            saveMessage(pid, {text, sender:s, type:'text', timestamp:Date.now()});
         }
-        
-        function displayFileMessage(peerId, data, sender) {
-            const window = document.getElementById('chat-window');
-            const placeholder = document.getElementById('chat-placeholder');
-            if (placeholder) placeholder.style.display = 'none';
-            
-            const div = document.createElement('div');
-            div.className = `flex ${sender === 'mine' ? 'justify-end' : 'justify-start'} mb-2 md:mb-3`;
-            
-            let content;
-            if (data.fileType.startsWith('image/')) {
-                content = document.createElement('img');
-                content.src = data.fileData;
-                content.className = 'msg-image';
-                content.onclick = () => {
-                    document.getElementById('fullscreen-image').src = data.fileData;
-                    document.getElementById('image-modal').classList.remove('hidden');
-                };
-            } else if (data.fileType.startsWith('video/')) {
-                content = document.createElement('video');
-                content.src = data.fileData;
-                content.controls = true;
-                content.className = 'msg-image max-w-[200px] md:max-w-[250px] rounded-xl md:rounded-2xl';
+
+        function displayFileMessage(pid, data, s){
+            let w = document.getElementById('chat-window'); document.getElementById('chat-placeholder').style.display='none';
+            let d = document.createElement('div'); d.className = `flex ${s==='mine'?'justify-end':'justify-start'} mb-3`;
+            let c; 
+            if(data.fileType?.startsWith('image/')){
+                c = document.createElement('img'); c.src = data.fileData; c.className = 'msg-image'; c.onclick = ()=>showFullscreen(data.fileData);
+            } else if(data.fileType?.startsWith('video/')){
+                c = document.createElement('video'); c.src = data.fileData; c.controls = true; c.className = 'msg-image max-w-[250px] rounded-2xl';
             } else {
-                content = document.createElement('a');
-                content.href = data.fileData;
-                content.download = data.fileName || 'file';
-                content.textContent = '📎 ' + (data.fileName || 'Download');
-                content.className = 'glass-panel-light px-4 md:px-5 py-2.5 md:py-3 rounded-xl md:rounded-2xl text-blue-400 text-xs md:text-sm inline-block';
+                c = document.createElement('a'); c.href = data.fileData; c.download = data.fileName||'file'; c.innerText = '📎 '+ (data.fileName||'Download'); c.className = 'glass-panel-light px-5 py-3 rounded-2xl text-blue-400';
             }
-            
-            div.appendChild(content);
-            window.appendChild(div);
-            window.scrollTop = window.scrollHeight;
-            
-            saveMessage(peerId, { ...data, sender, type: 'file', timestamp: Date.now() });
+            d.appendChild(c); w.appendChild(d); w.scrollTop = w.scrollHeight;
+            saveMessage(pid, {...data, sender:s, type:'file', timestamp:Date.now()});
         }
-        
-        // ==================== CHAT MANAGEMENT ====================
-        function selectChat(peerId) {
-            const entry = conns.get(peerId);
-            if (!entry || !entry.accepted) {
-                showToast('Cannot start chat', 'error');
-                return;
-            }
-            
-            currentConn = entry.conn;
-            
-            document.getElementById('partner-display').innerText = entry.name;
-            document.getElementById('partner-pfp').src = entry.pfp;
+
+        function showFullscreen(src){ let m=document.getElementById('image-modal'); document.getElementById('fullscreen-image').src=src; m.classList.remove('hidden'); }
+
+        function selectChat(pid){
+            let e = conns.get(pid); if(!e||!e.accepted) return showToast('Not accepted','error');
+            currentConn = e.conn;
+            document.getElementById('partner-display').innerText = e.name;
+            document.getElementById('partner-pfp').src = e.pfp;
             document.getElementById('status-dot').className = 'status-dot status-online';
             document.getElementById('status-text').innerText = 'Online';
-            
-            document.querySelectorAll('.peer-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`peer-card-${peerId}`)?.classList.add('active');
-            
-            document.getElementById('chat-window').innerHTML = '';
-            document.getElementById('chat-placeholder').style.display = 'none';
-            
-            loadMessages(peerId);
-            closeSidebar();
+            document.querySelectorAll('.peer-card').forEach(c=>c.classList.remove('active'));
+            document.getElementById(`peer-card-${pid}`)?.classList.add('active');
+            document.getElementById('chat-window').innerHTML = ''; document.getElementById('chat-placeholder').style.display='flex';
+            loadMessages(pid); closeSidebar();
         }
-        
-        // ==================== PEER CARD MANAGEMENT ====================
-        function renderPeerCard(peerId) {
-            if (document.getElementById(`peer-card-${peerId}`)) return;
-            
-            const entry = conns.get(peerId);
-            const list = document.getElementById('peer-list');
-            
-            const card = document.createElement('div');
-            card.id = `peer-card-${peerId}`;
-            card.className = `peer-card ${entry.accepted ? '' : 'opacity-70'}`;
-            card.onclick = () => selectChat(peerId);
-            
-            card.innerHTML = `
-                <img src="${entry.pfp}" class="peer-avatar">
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-sm md:text-base text-white truncate">${entry.name}</h4>
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="status-dot ${entry.accepted ? 'status-online' : 'status-offline'}"></span>
-                        <span class="text-[10px] md:text-xs ${entry.accepted ? 'text-green-500' : 'text-yellow-500'} truncate">${entry.accepted ? 'Connected' : 'Pending...'}</span>
-                    </div>
-                </div>
-            `;
-            
+
+        function renderPeerCard(pid){
+            if(document.getElementById(`peer-card-${pid}`)) return;
+            let e = conns.get(pid); let list = document.getElementById('peer-list');
+            let card = document.createElement('div'); card.id = `peer-card-${pid}`; card.className = `peer-card ${e.accepted?'':'opacity-60'}`; card.onclick = ()=>selectChat(pid);
+            card.innerHTML = `<img src="${e.pfp}" class="peer-avatar"><div class="flex-1"><h4 class="font-bold text-white">${e.name}</h4><div class="flex items-center gap-2 mt-1"><span class="status-dot ${e.accepted?'status-online':'status-offline'}"></span><span class="text-xs ${e.accepted?'text-green-400':'text-yellow-500'}">${e.accepted?'Connected':'Pending'}</span></div></div>`;
             list.appendChild(card);
         }
-        
-        function updatePeerCard(peerId) {
-            const card = document.getElementById(`peer-card-${peerId}`);
-            const entry = conns.get(peerId);
-            if (!card || !entry) return;
-            
-            card.querySelector('img').src = entry.pfp;
-            card.querySelector('h4').innerText = entry.name;
-            card.classList.toggle('opacity-70', !entry.accepted);
-            
-            const statusDot = card.querySelector('.status-dot');
-            statusDot.className = `status-dot ${entry.accepted ? 'status-online' : 'status-offline'}`;
-            
-            const statusText = card.querySelector('.peer-status') || card.querySelector('span:last-child');
-            if (statusText) {
-                statusText.innerText = entry.accepted ? 'Connected' : 'Pending...';
-                statusText.className = `text-[10px] md:text-xs ${entry.accepted ? 'text-green-500' : 'text-yellow-500'}`;
+        function updatePeerCard(pid){
+            let c = document.getElementById(`peer-card-${pid}`); let e = conns.get(pid); if(!c||!e) return;
+            c.querySelector('img').src = e.pfp; c.querySelector('h4').innerText = e.name;
+            c.classList.toggle('opacity-60', !e.accepted);
+            c.querySelector('.status-dot').className = `status-dot ${e.accepted?'status-online':'status-offline'}`;
+            c.querySelector('.text-xs').innerText = e.accepted?'Connected':'Pending';
+        }
+        function removePeerCard(pid){ document.getElementById(`peer-card-${pid}`)?.remove(); }
+        function cleanupPeer(pid){
+            conns.delete(pid); removePeerCard(pid);
+            if(currentConn?.peer === pid){
+                currentConn=null; document.getElementById('partner-display').innerText='Select chat'; document.getElementById('partner-pfp').src='https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default';
+                document.getElementById('status-dot').className='status-dot status-offline'; document.getElementById('status-text').innerText='Disconnected';
             }
         }
-        
-        function removePeerCard(peerId) {
-            document.getElementById(`peer-card-${peerId}`)?.remove();
+        function saveMessage(pid, m){
+            try{ let s = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); if(!s[pid]) s[pid]=[]; s[pid].push(m); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){}
         }
-        
-        function cleanupPeer(peerId) {
-            conns.delete(peerId);
-            removePeerCard(peerId);
-            
-            if (currentConn?.peer === peerId) {
-                currentConn = null;
-                document.getElementById('partner-display').innerText = 'Select a chat';
-                document.getElementById('partner-pfp').src = 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default';
-                document.getElementById('status-dot').className = 'status-dot status-offline';
-                document.getElementById('status-text').innerText = 'Disconnected';
-            }
+        function loadMessages(pid){
+            try{ let s = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); let msgs = s[pid]||[]; msgs.forEach(m => { if(m.type==='text') displayMessage(pid,m.text,m.sender); else displayFileMessage(pid,m,m.sender); }); }catch(e){}
         }
-        
-        // ==================== STORAGE ====================
-        function saveMessage(peerId, msg) {
-            try {
-                const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                if (!storage[peerId]) storage[peerId] = [];
-                storage[peerId].push(msg);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-            } catch (e) {}
-        }
-        
-        function loadMessages(peerId) {
-            try {
-                const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                const msgs = storage[peerId] || [];
-                msgs.forEach(msg => {
-                    if (msg.type === 'text') {
-                        displayMessage(peerId, msg.text, msg.sender);
-                    } else if (msg.type === 'file') {
-                        displayFileMessage(peerId, msg, msg.sender);
-                    }
-                });
-            } catch (e) {}
-        }
-        
-        // ==================== UTILITIES ====================
-        function copyID() {
-            if (myId) {
-                navigator.clipboard.writeText(myId);
-                showToast('ID copied!');
-            }
-        }
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.getElementById('request-modal').classList.add('hidden');
-                document.getElementById('image-modal').classList.add('hidden');
-                closeSidebar();
-            }
-        });
-        
-        init();
-    </script>
+        function copyID(){ if(myId){ navigator.clipboard.writeText(myId); showToast('ID copied!'); } }
+
+        // escape
+        document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ document.getElementById('request-modal').classList.add('hidden'); document.getElementById('image-modal').classList.add('hidden'); closeSidebar(); } });
+
+        // load pfp preview
+        let savedPfp = localStorage.getItem(PFP_KEY);
+        if(savedPfp){ myPfp = savedPfp; document.getElementById('pfp-preview').src = myPfp; }
+        else { let seed = Math.random().toString(36).substring(7); myPfp = `https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=${seed}`; document.getElementById('pfp-preview').src = myPfp; }
+        let savedName = localStorage.getItem('darkfish_name'); if(savedName) document.getElementById('username').value = savedName;
+    })();
+</script>
 </body>
 </html>
