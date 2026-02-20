@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DarkFish Messenger - P2P Encrypted</title>
+    <title>DarkFish Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -59,8 +59,9 @@
             background: linear-gradient(135deg, #2563eb, #3b82f6);
             border-radius: 24px 24px 4px 24px;
             box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
             position: relative;
+            animation: messagePop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
         .bubble-mine::after {
@@ -75,11 +76,18 @@
             opacity: 0.8;
         }
         
+        .bubble-mine:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6);
+        }
+        
         .bubble-theirs {
             background: #262f3d;
             border-radius: 24px 24px 24px 4px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            animation: messagePop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
         .bubble-theirs::after {
@@ -94,6 +102,11 @@
             border-left: 1px solid rgba(255,255,255,0.03);
         }
         
+        .bubble-theirs:hover {
+            transform: scale(1.02) translateY(-2px);
+            background: #2a3442;
+        }
+        
         .bubble-mine, .bubble-theirs {
             position: relative;
             max-width: 70%;
@@ -101,15 +114,35 @@
             font-size: 15px;
             line-height: 1.5;
             word-wrap: break-word;
-            animation: messagePop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
         @keyframes messagePop {
-            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+            50% { transform: scale(1.02) translateY(-2px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
         
-        /* Sidebar - Fixed Width */
+        /* Image Message */
+        .msg-image {
+            max-width: 300px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            box-shadow: 0 10px 30px -10px black;
+            animation: imagePop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+        
+        .msg-image:hover {
+            transform: scale(1.05) rotate(1deg);
+            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5);
+        }
+        
+        @keyframes imagePop {
+            0% { opacity: 0; transform: scale(0.8) rotate(-2deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0); }
+        }
+        
+        /* Sidebar */
         .sidebar {
             width: 380px;
             min-width: 380px;
@@ -121,6 +154,7 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
         @media (max-width: 768px) {
@@ -128,16 +162,35 @@
                 position: fixed;
                 left: 0;
                 top: 0;
-                z-index: 50;
+                z-index: 1000;
                 transform: translateX(-100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 width: 85%;
                 max-width: 380px;
+                box-shadow: 20px 0 40px rgba(0, 0, 0, 0.5);
             }
             
             .sidebar.open {
                 transform: translateX(0);
             }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(5px);
+                z-index: 999;
+                animation: fadeIn 0.3s ease;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         /* Peer Cards */
@@ -147,24 +200,36 @@
             border-radius: 20px;
             padding: 16px;
             margin-bottom: 12px;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 16px;
             backdrop-filter: blur(5px);
+            animation: cardSlide 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            transform-origin: left;
+        }
+        
+        @keyframes cardSlide {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
         
         .peer-card:hover {
-            background: rgba(40, 48, 64, 0.7);
-            border-color: rgba(59, 130, 246, 0.2);
-            transform: translateX(4px);
+            background: rgba(40, 48, 64, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 10px 25px -10px rgba(59, 130, 246, 0.3);
+        }
+        
+        .peer-card:active {
+            transform: scale(0.98);
         }
         
         .peer-card.active {
-            background: rgba(37, 99, 235, 0.15);
-            border-color: rgba(59, 130, 246, 0.4);
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+            background: rgba(37, 99, 235, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.3);
         }
         
         /* Profile Picture */
@@ -174,12 +239,12 @@
             border-radius: 18px;
             object-fit: cover;
             border: 2px solid rgba(59, 130, 246, 0.3);
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
         }
         
         .peer-card:hover .peer-avatar {
             border-color: #3b82f6;
-            transform: scale(1.05);
+            transform: scale(1.1) rotate(5deg);
         }
         
         /* Status Indicators */
@@ -193,8 +258,8 @@
         }
         
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
         
         .status-online { background: #10b981; box-shadow: 0 0 15px #10b981; }
@@ -221,10 +286,12 @@
         ::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
+            transition: all 0.3s;
         }
         
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.5);
         }
         
         /* Input Fields */
@@ -235,20 +302,32 @@
             padding: 16px 24px;
             color: white;
             font-size: 15px;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
             width: 100%;
         }
         
         .premium-input:focus {
             outline: none;
             border-color: #3b82f6;
-            background: rgba(40, 48, 64, 0.8);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(40, 48, 64, 0.9);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+            transform: scale(1.02);
+        }
+        
+        .premium-input:hover {
+            background: rgba(35, 40, 52, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
         }
         
         .premium-input::placeholder {
             color: rgba(255, 255, 255, 0.2);
             font-weight: 400;
+            transition: all 0.3s;
+        }
+        
+        .premium-input:focus::placeholder {
+            opacity: 0;
+            transform: translateX(10px);
         }
         
         /* Buttons */
@@ -260,17 +339,37 @@
             font-weight: 700;
             color: white;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
             box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .premium-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .premium-button:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .premium-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px -8px rgba(37, 99, 235, 0.7);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 20px 30px -8px rgba(37, 99, 235, 0.7);
         }
         
         .premium-button:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
         }
         
         .premium-button-secondary {
@@ -279,12 +378,20 @@
             border-radius: 30px;
             padding: 16px 24px;
             color: rgba(255, 255, 255, 0.7);
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            position: relative;
+            overflow: hidden;
         }
         
         .premium-button-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        .premium-button-secondary:active {
+            transform: translateY(0);
         }
         
         /* Setup Screen */
@@ -297,6 +404,12 @@
             max-width: 600px;
             width: 90%;
             box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
+            animation: setupAppear 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+        
+        @keyframes setupAppear {
+            0% { opacity: 0; transform: scale(0.8) translateY(50px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
         
         /* Profile Picture Upload */
@@ -307,6 +420,12 @@
             margin: 0 auto 32px;
             position: relative;
             cursor: pointer;
+            animation: pfpFloat 3s infinite ease-in-out;
+        }
+        
+        @keyframes pfpFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         
         .pfp-upload img {
@@ -317,13 +436,13 @@
             border: 4px solid #3b82f6;
             padding: 4px;
             background: #0a0c12;
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1);
         }
         
         .pfp-upload:hover img {
-            transform: scale(1.05) rotate(5deg);
+            transform: scale(1.1) rotate(10deg);
             border-color: #60a5fa;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.6);
         }
         
         .pfp-upload-overlay {
@@ -338,12 +457,18 @@
             align-items: center;
             justify-content: center;
             border: 4px solid #0a0c12;
-            transition: all 0.2s;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
+            animation: overlayPulse 2s infinite;
+        }
+        
+        @keyframes overlayPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #3b82f6; }
         }
         
         .pfp-upload:hover .pfp-upload-overlay {
             background: #3b82f6;
-            transform: scale(1.1);
+            transform: scale(1.2) rotate(180deg);
         }
         
         /* Modal */
@@ -355,8 +480,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
         }
         
         .modal-content {
@@ -367,11 +492,13 @@
             width: 90%;
             border: 1px solid rgba(255, 255, 255, 0.03);
             box-shadow: 0 40px 80px -20px black;
-            animation: scaleIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            animation: modalPop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.8) translateY(30px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
         
         /* Typing Indicator */
         .typing-indicator {
@@ -382,6 +509,12 @@
             border-radius: 30px;
             width: fit-content;
             margin: 10px 0;
+            animation: typingFade 0.5s ease;
+        }
+        
+        @keyframes typingFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .typing-dot {
@@ -415,23 +548,100 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             z-index: 10000;
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
         
-        /* File Message */
-        .file-message {
-            max-width: 300px;
-            border-radius: 24px;
+        /* Close Button */
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+            z-index: 1010;
         }
         
-        .file-message:hover {
-            transform: scale(1.02);
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: rotate(90deg) scale(1.1);
+            border-color: #3b82f6;
+        }
+        
+        .close-button:active {
+            transform: rotate(180deg) scale(0.9);
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            background: rgba(18, 22, 28, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            .mobile-menu-btn:hover {
+                background: rgba(37, 99, 235, 0.3);
+                transform: scale(1.1);
+                border-color: #3b82f6;
+            }
+            
+            .mobile-menu-btn:active {
+                transform: scale(0.9);
+            }
+        }
+        
+        /* Image Modal */
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            animation: imageModalFade 0.3s ease;
+        }
+        
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 24px;
+            box-shadow: 0 30px 60px -20px black;
+            animation: imageModalZoom 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+        
+        @keyframes imageModalZoom {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
         
         /* No Select */
@@ -447,7 +657,7 @@
     <div id="setup-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="setup-container">
             <div class="text-center mb-10">
-                <h1 class="text-6xl font-black tracking-tighter bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent mb-3">DarkFish</h1>
+                <h1 class="text-6xl font-black tracking-tighter bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent mb-3 animate-pulse">DarkFish</h1>
                 <p class="text-slate-500 text-sm uppercase tracking-[0.3em] font-bold">Private P2P Messenger</p>
             </div>
             
@@ -492,15 +702,23 @@
         </div>
     </div>
 
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <!-- Main Chat Interface -->
     <div id="chat-screen" class="hidden h-screen w-screen flex">
-        <!-- Sidebar Toggle for Mobile -->
-        <button onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-50 w-12 h-12 glass-panel rounded-2xl flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-
         <!-- Sidebar -->
         <div id="sidebar" class="sidebar">
+            <!-- Close Button for Mobile -->
+            <div class="close-button md:hidden" onclick="closeSidebar()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            
             <!-- Sidebar Header -->
             <div class="p-6 border-b border-white/5 flex items-center justify-between">
                 <h1 class="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Inbox</h1>
@@ -512,11 +730,11 @@
             
             <!-- My ID Card -->
             <div class="p-6 border-b border-white/5">
-                <div class="glass-panel-light p-4 rounded-2xl">
+                <div class="glass-panel-light p-4 rounded-2xl hover:scale-105 transition-transform duration-300">
                     <div class="text-xs text-slate-500 mb-2">YOUR ID</div>
                     <div class="flex items-center justify-between">
                         <code id="my-id-display" class="text-sm font-mono bg-black/30 px-3 py-2 rounded-xl">loading...</code>
-                        <button onclick="copyID()" class="text-blue-400 hover:text-blue-300 transition-colors">
+                        <button onclick="copyID()" class="text-blue-400 hover:text-blue-300 transition-all hover:scale-110 active:scale-95">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         </button>
                     </div>
@@ -546,9 +764,9 @@
         <!-- Main Chat Area -->
         <div class="flex-1 flex flex-col relative">
             <!-- Chat Header -->
-            <div class="glass-panel m-4 rounded-2xl p-4 flex items-center justify-between">
+            <div class="glass-panel m-4 rounded-2xl p-4 flex items-center justify-between animate-slideDown">
                 <div class="flex items-center gap-4">
-                    <img id="partner-pfp" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default" class="w-14 h-14 rounded-2xl border-2 border-blue-500/50">
+                    <img id="partner-pfp" src="https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default" class="w-14 h-14 rounded-2xl border-2 border-blue-500/50 transition-all hover:scale-110 hover:rotate-6 duration-300">
                     <div>
                         <h2 id="partner-display" class="font-black text-xl">Select a chat</h2>
                         <div class="flex items-center gap-2 mt-1">
@@ -557,8 +775,8 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="copyID()" class="premium-button-secondary px-6 py-3 text-sm font-bold flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <button onclick="copyID()" class="premium-button-secondary px-6 py-3 text-sm font-bold flex items-center gap-2 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:rotate-12 transition-transform"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     Copy ID
                 </button>
             </div>
@@ -567,7 +785,7 @@
             <div id="chat-window" class="flex-1 overflow-y-auto px-6 py-4 space-y-4 chat-window">
                 <!-- Placeholder when no chat -->
                 <div id="chat-placeholder" class="h-full flex flex-col items-center justify-center text-center">
-                    <div class="w-24 h-24 glass-panel-light rounded-3xl flex items-center justify-center mb-6">
+                    <div class="w-24 h-24 glass-panel-light rounded-3xl flex items-center justify-center mb-6 animate-bounce">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
                     <h3 class="text-2xl font-black text-slate-300 mb-3">End-to-End Encrypted</h3>
@@ -587,15 +805,15 @@
             <!-- Message Input -->
             <div class="p-6">
                 <div class="glass-panel-light rounded-3xl p-3 flex items-center gap-3">
-                    <label class="p-3 hover:bg-white/5 rounded-2xl cursor-pointer transition-colors">
+                    <label class="p-3 hover:bg-white/5 rounded-2xl cursor-pointer transition-all hover:scale-110 active:scale-95 group">
                         <input type="file" id="file-input" class="hidden" accept="image/*,video/*">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:rotate-12 transition-transform"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </label>
                     
                     <form id="chat-form" class="flex-1 flex items-center gap-3">
                         <input type="text" id="msg-input" autocomplete="off" placeholder="Type a message..." class="flex-1 bg-transparent px-4 py-3 outline-none text-base placeholder:text-slate-600">
-                        <button type="submit" class="premium-button p-4 rounded-2xl">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        <button type="submit" class="premium-button p-4 rounded-2xl group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="group-hover:translate-x-1 transition-transform"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                         </button>
                     </form>
                 </div>
@@ -607,7 +825,7 @@
     <div id="request-modal" class="modal-backdrop hidden">
         <div class="modal-content">
             <div class="text-center">
-                <div class="w-20 h-20 mx-auto mb-6 bg-blue-500/20 rounded-3xl flex items-center justify-center">
+                <div class="w-20 h-20 mx-auto mb-6 bg-blue-500/20 rounded-3xl flex items-center justify-center animate-pulse">
                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <h3 class="text-2xl font-black mb-2">Friend Request</h3>
@@ -622,6 +840,11 @@
         </div>
     </div>
 
+    <!-- Image Modal for Fullscreen View -->
+    <div id="image-modal" class="image-modal hidden" onclick="this.classList.add('hidden')">
+        <img id="fullscreen-image" src="" alt="Full screen">
+    </div>
+
     <!-- Toast Container -->
     <div id="toast" class="toast"></div>
 
@@ -632,6 +855,7 @@
         let myId = null;
         let myName = '';
         let myPfp = null;
+        let pendingRequests = new Map(); // Store pending requests
         
         const STORAGE_KEY = 'darkfish_chats';
         const ACCEPTED_PEERS_KEY = 'darkfish_peers';
@@ -659,7 +883,15 @@
         
         // ==================== UI FUNCTIONS ====================
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+        
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
         }
         
         function showToast(msg, type = 'info') {
@@ -732,7 +964,7 @@
                 const savedPeers = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
                 savedPeers.forEach(peerId => {
                     if (peerId !== id) {
-                        connectToPeer(peerId);
+                        setTimeout(() => connectToPeer(peerId), 1000);
                     }
                 });
                 
@@ -777,7 +1009,7 @@
             }
             connectToPeer(peerId);
             document.getElementById('add-peer-id').value = '';
-            toggleSidebar();
+            closeSidebar();
         }
         
         // ==================== CONNECTION SETUP ====================
@@ -787,7 +1019,7 @@
             conns.set(peerId, {
                 conn: conn,
                 accepted: false,
-                name: isInitiator ? 'Pending...' : 'New Request',
+                name: isInitiator ? 'Connecting...' : 'Incoming Request',
                 pfp: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=pending',
                 typingTimeout: null
             });
@@ -797,14 +1029,18 @@
             conn.on('open', () => {
                 console.log('Connection opened with', peerId);
                 
-                if (!isInitiator && conn.metadata?.request) {
-                    // Check if this peer was previously accepted
-                    const savedPeers = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
-                    if (savedPeers.includes(peerId)) {
-                        acceptPeer(peerId, conn.metadata.name, conn.metadata.pfp);
-                    } else {
-                        showRequestModal(peerId, conn.metadata.name, conn.metadata.pfp);
-                    }
+                // Check if this peer was previously accepted
+                const savedPeers = JSON.parse(localStorage.getItem(ACCEPTED_PEERS_KEY) || '[]');
+                
+                if (savedPeers.includes(peerId)) {
+                    // Auto-accept previously accepted peers
+                    autoAcceptPeer(peerId, conn.metadata?.name, conn.metadata?.pfp);
+                } else if (!isInitiator && conn.metadata?.request) {
+                    // Show modal for new requests
+                    showRequestModal(peerId, conn.metadata.name, conn.metadata.pfp);
+                } else if (isInitiator) {
+                    // For initiator, wait for acceptance
+                    updatePeerStatus(peerId, 'Waiting for acceptance...', 'pending');
                 }
             });
             
@@ -823,21 +1059,56 @@
             });
         }
         
+        function autoAcceptPeer(peerId, name, pfp) {
+            const entry = conns.get(peerId);
+            if (!entry) return;
+            
+            entry.accepted = true;
+            entry.name = name || 'Friend';
+            entry.pfp = pfp || entry.pfp;
+            
+            // Send acceptance
+            entry.conn.send({
+                type: 'accept',
+                name: myName,
+                pfp: myPfp
+            });
+            
+            updatePeerCard(peerId);
+            showToast('Auto-connected to ' + entry.name);
+        }
+        
         function showRequestModal(peerId, name, pfp) {
+            // Store in pending requests
+            pendingRequests.set(peerId, { name, pfp });
+            
             document.getElementById('request-name').innerText = name || 'Someone';
             document.getElementById('request-modal').classList.remove('hidden');
             
-            document.getElementById('accept-btn').onclick = () => {
+            // Remove any existing listeners
+            const acceptBtn = document.getElementById('accept-btn');
+            const rejectBtn = document.getElementById('reject-btn');
+            
+            // Clone and replace to remove old listeners
+            const newAccept = acceptBtn.cloneNode(true);
+            const newReject = rejectBtn.cloneNode(true);
+            acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
+            rejectBtn.parentNode.replaceChild(newReject, rejectBtn);
+            
+            // Add new listeners
+            newAccept.onclick = () => {
                 acceptPeer(peerId, name, pfp);
                 document.getElementById('request-modal').classList.add('hidden');
+                pendingRequests.delete(peerId);
             };
             
-            document.getElementById('reject-btn').onclick = () => {
+            newReject.onclick = () => {
                 const entry = conns.get(peerId);
                 if (entry) entry.conn.close();
                 conns.delete(peerId);
                 removePeerCard(peerId);
                 document.getElementById('request-modal').classList.add('hidden');
+                pendingRequests.delete(peerId);
             };
         }
         
@@ -868,7 +1139,7 @@
             // Auto-select this chat
             selectChat(peerId);
             
-            showToast('Connected to ' + name);
+            showToast('Connected to ' + entry.name);
         }
         
         // ==================== DATA HANDLING ====================
@@ -914,7 +1185,7 @@
                 
             } else if (data.type === 'file') {
                 if (entry.accepted) {
-                    displayFileMessage(peerId, data);
+                    displayFileMessage(peerId, data, 'theirs');
                 }
             }
         }
@@ -1001,19 +1272,22 @@
             if (data.fileType.startsWith('image/')) {
                 content = document.createElement('img');
                 content.src = data.fileData;
-                content.className = 'file-message max-w-[300px] rounded-2xl';
-                content.onclick = () => window.open(data.fileData);
+                content.className = 'msg-image';
+                content.onclick = (e) => {
+                    e.stopPropagation();
+                    showFullscreenImage(data.fileData);
+                };
             } else if (data.fileType.startsWith('video/')) {
                 content = document.createElement('video');
                 content.src = data.fileData;
                 content.controls = true;
-                content.className = 'file-message max-w-[300px] rounded-2xl';
+                content.className = 'msg-image max-w-[300px] rounded-2xl';
             } else {
                 content = document.createElement('a');
                 content.href = data.fileData;
                 content.download = data.fileName || 'file';
                 content.textContent = '📎 ' + (data.fileName || 'Download');
-                content.className = 'glass-panel-light px-6 py-4 rounded-2xl text-blue-400 hover:text-blue-300';
+                content.className = 'glass-panel-light px-6 py-4 rounded-2xl text-blue-400 hover:text-blue-300 transition-all hover:scale-105 inline-block';
             }
             
             div.appendChild(content);
@@ -1022,6 +1296,13 @@
             
             // Save to storage
             saveMessage(peerId, { ...data, sender, type: 'file', timestamp: Date.now() });
+        }
+        
+        function showFullscreenImage(src) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('fullscreen-image');
+            img.src = src;
+            modal.classList.remove('hidden');
         }
         
         // ==================== CHAT MANAGEMENT ====================
@@ -1052,8 +1333,17 @@
             loadMessages(peerId);
             
             // Close sidebar on mobile
-            if (window.innerWidth < 768) {
-                document.getElementById('sidebar').classList.remove('open');
+            closeSidebar();
+        }
+        
+        function updatePeerStatus(peerId, status, type) {
+            const card = document.getElementById(`peer-card-${peerId}`);
+            if (!card) return;
+            
+            const statusEl = card.querySelector('.peer-status');
+            if (statusEl) {
+                statusEl.innerText = status;
+                statusEl.className = `text-xs peer-status ${type === 'pending' ? 'text-yellow-500' : 'text-slate-500'}`;
             }
         }
         
@@ -1075,7 +1365,7 @@
                     <h4 class="font-bold text-white">${entry.name}</h4>
                     <div class="flex items-center gap-2 mt-1">
                         <span class="status-dot ${entry.accepted ? 'status-online' : 'status-offline'}"></span>
-                        <span class="text-xs text-slate-500">${entry.accepted ? 'Connected' : 'Pending'}</span>
+                        <span class="text-xs peer-status ${entry.accepted ? 'text-green-500' : 'text-yellow-500'}">${entry.accepted ? 'Connected' : 'Pending...'}</span>
                     </div>
                 </div>
             `;
@@ -1094,7 +1384,10 @@
             
             const statusDot = card.querySelector('.status-dot');
             statusDot.className = `status-dot ${entry.accepted ? 'status-online' : 'status-offline'}`;
-            card.querySelector('.text-xs').innerText = entry.accepted ? 'Connected' : 'Pending';
+            
+            const statusText = card.querySelector('.peer-status');
+            statusText.innerText = entry.accepted ? 'Connected' : 'Pending...';
+            statusText.className = `text-xs peer-status ${entry.accepted ? 'text-green-500' : 'text-yellow-500'}`;
         }
         
         function removePeerCard(peerId) {
@@ -1108,6 +1401,7 @@
             if (currentConn?.peer === peerId) {
                 currentConn = null;
                 document.getElementById('partner-display').innerText = 'Select a chat';
+                document.getElementById('partner-pfp').src = 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=default';
                 document.getElementById('status-dot').className = 'status-dot status-offline';
                 document.getElementById('status-text').innerText = 'Disconnected';
             }
@@ -1148,6 +1442,15 @@
                 showToast('ID copied to clipboard!');
             }
         }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('request-modal').classList.add('hidden');
+                document.getElementById('image-modal').classList.add('hidden');
+                closeSidebar();
+            }
+        });
         
         // Initialize
         init();
